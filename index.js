@@ -1,6 +1,6 @@
 const SlackBot = require('slackbots');
 const dotenv = require('dotenv');
-const customMessage = require('./block.json');
+//const customMessage = require('./block.json');
 const axios = require('axios');
 const basicAuth = require('basic-auth');
 
@@ -16,7 +16,9 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-app.get('/ticket', async (req, res) => {
+app.get('/ticket/:id', async (req, res) => {
+  const { id } = req.params;
+  console.log(id);
   const { name, pass } = basicAuth(req);
   if (
     name === `${process.env.STORYPOINT_USERNAME}` &&
@@ -24,7 +26,7 @@ app.get('/ticket', async (req, res) => {
   ) {
     console.log('successful login');
     const { data } = await axios.get(
-      'https://issues.redhat.com/rest/api/2/issue/THEEDGE-958',
+      `https://issues.redhat.com/rest/api/2/issue/THEEDGE-${id}`,
       {
         auth: {
           username: `${process.env.JIRA_USERNAME}`,
@@ -32,7 +34,12 @@ app.get('/ticket', async (req, res) => {
         },
       }
     );
-    return res.json({ data });
+    return res.json({
+      title: data.fields.summary,
+      description: data.fields.description,
+      assignee: data.fields.assignee.name,
+      link: `https://issues.redhat.com/browse/THEEDGE-${id}`,
+    });
   }
   return res.status(401).json({ message: 'You are not authorized' });
 });
@@ -71,18 +78,18 @@ bot.on('message', (data) => {
     return;
   }
   console.log('received message');
+  console.log(data.text.split(' ')[1]);
 
   handleTestMessage(data);
 });
 
 const handleTestMessage = (data) => {
-  console.log(data.user);
   bot.getUserById(data.user).then((userData) => {
     console.log(userData);
     bot.postMessageToChannel(
       'random',
-      `@${userData.real_name} said ${data.text.split(' ')[1]}`,
-      customMessage
+      `@${userData.real_name} said ${data.text.split(' ')[1]}`
+      //      customMessage
     );
   });
 };

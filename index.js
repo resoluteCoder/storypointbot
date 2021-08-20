@@ -1,19 +1,32 @@
 const SlackBot = require('slackbots');
 const dotenv = require('dotenv');
 const customMessage = require('./block.json');
+const axios = require('axios');
 
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = process.env.PORT;
 
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+  console.log(`Story point bot is listening!`);
 });
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
+app.get('/ticket', async (req, res) => {
+  const { data } = await axios.get(
+    'https://issues.redhat.com/rest/api/2/issue/THEEDGE-958',
+    {
+      auth: {
+        username: `${process.env.JIRA_USERNAME}`,
+        password: `${process.env.JIRA_PASSWORD}`,
+      },
+    }
+  );
+  return res.json({ data });
+});
 app.post('/slack/actions', async (req, res) => {
   console.log('it works!');
   try {

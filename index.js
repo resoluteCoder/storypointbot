@@ -2,13 +2,14 @@ const SlackBot = require('slackbots');
 const dotenv = require('dotenv');
 const customMessage = require('./block.json');
 const axios = require('axios');
+const basicAuth = require('basic-auth');
 
 const express = require('express');
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
-  console.log(`Story point bot is listening!`);
+  console.log(`Story point bot is listening at port ${port}`);
 });
 
 app.get('/', (req, res) => {
@@ -16,17 +17,26 @@ app.get('/', (req, res) => {
 });
 
 app.get('/ticket', async (req, res) => {
-  const { data } = await axios.get(
-    'https://issues.redhat.com/rest/api/2/issue/THEEDGE-958',
-    {
-      auth: {
-        username: `${process.env.JIRA_USERNAME}`,
-        password: `${process.env.JIRA_PASSWORD}`,
-      },
-    }
-  );
-  return res.json({ data });
+  const { name, pass } = basicAuth(req);
+  if (
+    name === `${process.env.STORYPOINT_USERNAME}` &&
+    pass === `${process.env.STORYPOINT_PASSWORD}`
+  ) {
+    console.log('successful login');
+    const { data } = await axios.get(
+      'https://issues.redhat.com/rest/api/2/issue/THEEDGE-958',
+      {
+        auth: {
+          username: `${process.env.JIRA_USERNAME}`,
+          password: `${process.env.JIRA_PASSWORD}`,
+        },
+      }
+    );
+    return res.json({ data });
+  }
+  return res.status(401).json({ message: 'You are not authorized' });
 });
+
 app.post('/slack/actions', async (req, res) => {
   console.log('it works!');
   try {

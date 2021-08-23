@@ -33,39 +33,93 @@ bot.on('error', (err) => {
 
 // Message Handler
 bot.on('message', (data) => {
-  if (data.type !== 'message') {
+  if (data.type !== 'message' || data.bot_id) {
     return;
   }
-  console.log('received message');
+
+  console.log('received message', data);
   getTicketById(data);
 });
 
 //bot.getUserById(data.user).then((userData) => {}
 const getTicketById = async (messageData) => {
-  const id = messageData.text.split(' ')[1];
-  const { data } = await axios.get(
-    `https://issues.redhat.com/rest/api/2/issue/THEEDGE-${id}`,
-    {
-      auth: {
-        username: `${process.env.JIRA_USERNAME}`,
-        password: `${process.env.JIRA_PASSWORD}`,
-      },
-    }
-  );
-  const info = {
-    title: data.fields.summary,
-    description: data.fields.description,
-    assignee: data.fields.assignee.name,
-    link: `https://issues.redhat.com/browse/THEEDGE-${id}`,
-  };
-
-  bot.postMessageToChannel(
-    'random',
-    info
-    //      customMessage
-  );
+  //const id = messageData.text.split(' ')[1];
+  const id = 958;
+  try {
+    const { data } = await axios.get(
+      `https://issues.redhat.com/rest/api/2/issue/THEEDGE-${id}`,
+      {
+        auth: {
+          username: `${process.env.JIRA_USERNAME}`,
+          password: `${process.env.JIRA_PASSWORD}`,
+        },
+      }
+    );
+    const info = {
+      title: data.fields.summary,
+      description: data.fields.description,
+      assignee: data.fields.assignee.name,
+      link: `https://issues.redhat.com/browse/THEEDGE-${id}`,
+    };
+    console.log(createMessage(info));
+    bot.postMessageToChannel(
+      'random',
+      'test',
+      {
+        icon_emoji: ':robot_face:',
+        blocks: [
+          {
+            type: 'header',
+            text: {
+              type: 'plain_text',
+              text: `:ticket: ${info.title}? :ticket:`,
+            },
+          },
+          {
+            type: 'context',
+            elements: [
+              {
+                text: `*Assigned to ${info.assignee}* |  <${info.link}|THEEDGE-${id}>`,
+                type: 'mrkdwn',
+              },
+            ],
+          },
+          {
+            type: 'divider',
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '*Description*',
+            },
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'plain_text',
+              text: `${info.description}`,
+            },
+          },
+          {
+            type: 'divider',
+          },
+        ],
+      }
+      //      customMessage
+    );
+  } catch (error) {
+    console.log(error);
+  }
 };
 
+const createMessage = ({ title, description, assignee, link }) => {
+  const msgTitle = {
+    type: 'section',
+    text: { type: 'mrkdown', text: `*${title}?* Assigned to ${assignee}` },
+  };
+  return [msgTitle];
+};
 //app.get(`/ticket/${ticketID}`, async (req, res) => {
 //  const { name, pass } = basicAuth(req);
 //  if (

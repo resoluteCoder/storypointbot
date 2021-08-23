@@ -33,6 +33,7 @@ bot.on('error', (err) => {
 
 // Message Handler
 bot.on('message', (data) => {
+  // check for one bot per ticket
   if (data.type !== 'message' || data.bot_id) {
     return;
   }

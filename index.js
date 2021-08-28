@@ -5,6 +5,15 @@ const { App } = require('@slack/bolt');
 
 const port = process.env.PORT || 3000;
 
+let params = {}
+let scores = [
+  {'name':'1', 'score':0},
+  {'name':'2', 'score':0},
+  {'name':'5', 'score':0},
+  {'name':'8', 'score':0},
+  {'name':'13', 'score':0},
+]
+
 dotenv.config();
 
 const app = new App({
@@ -21,17 +30,26 @@ app.command('/storypointbot', async ({ command, ack, say }) => {
   console.log(command);
   await ack();
   const ticketInfo = await getTicketById(command.text);
-  const params = { icon_emoji: ':robot_face:', blocks: [], text: 'received' };
+  params = { icon_emoji: ':robot_face:', blocks: [], text: 'received' };
   params.blocks.push(...createTicketInfo(ticketInfo));
-  params.blocks.push(...createPoll().flat());
+  params.blocks.push(...createPoll(scores).flat());
 
   await say(params);
 });
 
-app.action(/actionId-[0-9]*/, async ({ body, ack, say }) => {
-  console.log('ACTION BODY', body);
+app.action(/actionId-[0-9]*/, async ({ body, ack, say, respond }) => {
   await ack();
-  //await say(`You pressed the number ${body.actions[0].value}`);
+  const buttonKey = body.message.blocks.find(block => block.block_id === body.actions[0].block_id).elements[0].value
+  scores.filter(score =>{
+    if (score.name === buttonKey){
+      score.score++
+    }
+  })
+  params.blocks.find(block => block.block_id === buttonKey).elements[0].text = `${scores.find(score => score.name === buttonKey).score} votes`
+  
+  respond({
+    ...params
+  })
 });
 
 //app.view('view_1', async ({ ack, body, view, client }) => {

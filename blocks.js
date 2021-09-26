@@ -69,6 +69,10 @@ const createPoll = (scores) => {
           type: 'mrkdwn',
           text: `${num.score} votes`,
         },
+        {
+          type: 'mrkdwn',
+          text: ' ',
+        },
       ],
     },
   ]);

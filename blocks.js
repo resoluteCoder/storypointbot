@@ -44,9 +44,8 @@ const createTicketInfo = ({
   },
 ];
 
-const createPoll = () => {
-  const nums = [1, 2, 5, 8, 13];
-  return nums.map((num) => [
+const createPoll = (scores) => {
+  return scores.map((num) => [
     {
       type: 'actions',
       elements: [
@@ -54,20 +53,25 @@ const createPoll = () => {
           type: 'button',
           text: {
             type: 'plain_text',
-            text: `${num}`,
+            text: `${num.name}`,
             emoji: true,
           },
-          value: `${num}`,
-          action_id: `actionId-${num}`,
+          value: `${num.name}`,
+          action_id: `actionId-${num.name}`,
         },
       ],
     },
     {
       type: 'context',
+      block_id: num.name,
       elements: [
         {
           type: 'mrkdwn',
-          text: 'No votes',
+          text: `${num.score} votes`,
+        },
+        {
+          type: 'mrkdwn',
+          text: ' ',
         },
       ],
     },
